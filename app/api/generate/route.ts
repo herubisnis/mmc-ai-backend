@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { startFirestoreListener } from '../../utils/firestoreListener';
+
+let listenerStarted = false;
 
 // Inisialisasi Google Generative AI dengan API Key
 const genAI = new GoogleGenerativeAI("AIzaSyANXT8yWyVRXa99ypFSpN_nGBWqii2tGtw");
@@ -8,6 +11,11 @@ const genAI = new GoogleGenerativeAI("AIzaSyANXT8yWyVRXa99ypFSpN_nGBWqii2tGtw");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export async function POST(request: Request) {
+    if (!listenerStarted) {
+        startFirestoreListener();
+        listenerStarted = true; // Pastikan listener hanya dijalankan sekali
+        console.log('Firestore Listener Started');
+      }
   try {
     // Ambil data dari body request
     const body = await request.json();
