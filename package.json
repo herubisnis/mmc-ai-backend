@@ -18,6 +18,8 @@
     "autoprefixer": "10.4.20",
     "axios": "^1.7.9",
     "concurrently": "^9.0.1",
+    "dotenv": "^16.4.7",
+    "env": "^0.0.2",
     "eslint": "8.41.0",
     "eslint-config-next": "13.4.4",
     "next": "^14.2.13",

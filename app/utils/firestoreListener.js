@@ -1,13 +1,25 @@
 import admin from 'firebase-admin';
-import { GenerativeModel } from '@google-generative-ai/api'; // Pastikan ini adalah library yang benar
+import { GenerativeModel } from '@google-generative-ai/api';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // Inisialisasi Firebase Admin SDK
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: 'if22dx-22312004',
-      clientEmail: 'herubisnis40865@gmail.com',
-      privateKey: 'AIzaSyAcz9ZIIqrXWosFFcxBpsafDTjEyqgETBo'.replace(/\\n/g, '\n'),
+      type: process.env.FIREBASE_TYPE,
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+      private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      client_id: process.env.FIREBASE_CLIENT_ID,
+      auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+      token_uri: 'https://oauth2.googleapis.com/token',
+      auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
+      client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+      universe_domain: 'googleapis.com',
     }),
   });
 }
@@ -17,7 +29,7 @@ const db = admin.firestore();
 // Inisialisasi model Gemini
 const model = new GenerativeModel({
   model: 'gemini-1.5-flash', // Sesuaikan model
-  apiKey: 'AIzaSyANXT8yWyVRXa99ypFSpN_nGBWqii2tGtw', // Ganti dengan API Key Anda
+  apiKey: process.env.API_KEY,
 });
 
 // Fungsi untuk memulai listener Firestore
@@ -30,7 +42,6 @@ export const startFirestoreListener = () => {
         const { name, age, education, goal } = data;
 
         try {
-          // Format input untuk Gemini
           const inputData = `
             Nama: ${name}
             Umur: ${age}
@@ -38,20 +49,17 @@ export const startFirestoreListener = () => {
             Cita-cita: ${goal}
           `;
 
-          // Panggil API Gemini menggunakan library
           const response = await model.generateMessage({
             prompt: `Tulis ulang biodata ini dan berikan saran terbaik: ${inputData}`,
           });
 
           const content = response.candidates?.[0]?.text || 'Tidak ada respons dari AI';
 
-          // Perbarui status dan hasil di Firestore
           await doc.ref.update({
             status: 'completed',
             result: content,
           });
         } catch (error) {
-          // Perbarui status dengan error jika terjadi kegagalan
           await doc.ref.update({
             status: 'error',
             error: error.message,
